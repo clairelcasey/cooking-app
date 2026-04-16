@@ -26,14 +26,6 @@ function parseSteps(raw: RecipeFormValues['steps']): RecipeStep[] {
   }))
 }
 
-function parseTags(raw: string | undefined): string[] {
-  if (!raw) return []
-  return raw
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean)
-}
-
 function parseNumber(val: string | number | undefined | ''): number | null {
   if (val === '' || val === undefined) return null
   const n = Number(val)
@@ -90,12 +82,12 @@ export async function createRecipe(
       description: formData.description || null,
       source_url: formData.source_url || null,
       cuisine: formData.cuisine || null,
-      tags: parseTags(formData.tags),
       difficulty: formData.difficulty || null,
+      meal_type: formData.meal_type || null,
+      is_vegetarian: formData.is_vegetarian ?? false,
       prep_minutes: parseNumber(formData.prep_minutes),
       cook_minutes: parseNumber(formData.cook_minutes),
       visibility: formData.visibility,
-      rating: parseNumber(formData.rating),
       notes: formData.notes || null,
       ingredients: parseIngredients(formData.ingredients),
       steps: parseSteps(formData.steps),
@@ -142,12 +134,12 @@ export async function updateRecipe(
       description: formData.description || null,
       source_url: formData.source_url || null,
       cuisine: formData.cuisine || null,
-      tags: parseTags(formData.tags),
       difficulty: formData.difficulty || null,
+      meal_type: formData.meal_type || null,
+      is_vegetarian: formData.is_vegetarian ?? false,
       prep_minutes: parseNumber(formData.prep_minutes),
       cook_minutes: parseNumber(formData.cook_minutes),
       visibility: formData.visibility,
-      rating: parseNumber(formData.rating),
       notes: formData.notes || null,
       ingredients: parseIngredients(formData.ingredients),
       steps: parseSteps(formData.steps),

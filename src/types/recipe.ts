@@ -24,6 +24,7 @@ export interface Nutrition {
 export type Visibility = 'private' | 'family' | 'public'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+export type MealType = 'breakfast' | 'lunch' | 'dinner'
 
 export interface Recipe {
   id: string
@@ -37,9 +38,9 @@ export interface Recipe {
   image_url: string | null
   ingredients: Ingredient[]
   steps: RecipeStep[]
-  tags: string[]
   cuisine: string | null
-  rating: number | null
+  meal_type: MealType | null
+  is_vegetarian: boolean
   difficulty: Difficulty | null
   prep_minutes: number | null
   cook_minutes: number | null
@@ -57,8 +58,8 @@ export type RecipeListItem = Pick<
   | 'id'
   | 'title'
   | 'image_url'
-  | 'rating'
-  | 'tags'
+  | 'meal_type'
+  | 'is_vegetarian'
   | 'cuisine'
   | 'difficulty'
   | 'prep_minutes'
@@ -69,12 +70,33 @@ export type RecipeListItem = Pick<
   | 'created_at'
 >
 
+export interface PlanEntry {
+  id: string
+  plan_id: string
+  entry_date: string
+  meal_slot: MealSlot
+  recipe_id: string | null
+  free_text_meal: string | null
+  status: 'planned' | 'cooked' | 'skipped'
+  recipe?: {
+    id: string
+    title: string
+    image_url: string | null
+    prep_minutes: number | null
+  }
+}
+
+export interface WeekPlan {
+  planId: string
+  entries: PlanEntry[]
+}
+
 export interface RecipeFilters {
   cuisine?: string
-  tags?: string[]
   difficulty?: Difficulty
-  minRating?: number
+  mealType?: MealType
+  vegetarian?: boolean
   search?: string
-  sortBy?: 'created_at' | 'rating' | 'cook_count' | 'last_cooked_at' | 'prep_minutes'
+  sortBy?: 'created_at' | 'cook_count' | 'last_cooked_at' | 'prep_minutes'
   sortDir?: 'asc' | 'desc'
 }

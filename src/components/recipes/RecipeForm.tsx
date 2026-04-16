@@ -13,16 +13,21 @@ import { Separator } from '@/components/ui/separator'
 import { ImageUpload } from './ImageUpload'
 import { IngredientFields } from './IngredientFields'
 import { StepFields } from './StepFields'
-import { StarRating } from './StarRating'
 import { recipeSchema, type RecipeFormValues } from '@/lib/validations/recipe'
 import { createRecipe, updateRecipe } from '@/app/recipes/actions'
 import { cn } from '@/lib/utils'
-import type { Recipe, Difficulty, Visibility } from '@/types/recipe'
+import type { Recipe, Difficulty, MealType, Visibility } from '@/types/recipe'
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: 'easy', label: 'Easy' },
   { value: 'medium', label: 'Medium' },
   { value: 'hard', label: 'Hard' },
+]
+
+const MEAL_TYPES: { value: MealType; label: string }[] = [
+  { value: 'breakfast', label: 'Breakfast' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'dinner', label: 'Dinner' },
 ]
 
 const VISIBILITIES: { value: Visibility; label: string; icon: React.ReactNode }[] = [
@@ -47,12 +52,12 @@ export function RecipeForm({ existing }: RecipeFormProps) {
         description: existing.description ?? '',
         source_url: existing.source_url ?? '',
         cuisine: existing.cuisine ?? '',
-        tags: existing.tags.join(', '),
         difficulty: existing.difficulty ?? undefined,
+        meal_type: existing.meal_type ?? undefined,
+        is_vegetarian: existing.is_vegetarian ?? false,
         prep_minutes: existing.prep_minutes ?? '',
         cook_minutes: existing.cook_minutes ?? '',
         visibility: existing.visibility,
-        rating: existing.rating ?? '',
         notes: existing.notes ?? '',
         ingredients:
           existing.ingredients.length > 0
@@ -76,9 +81,8 @@ export function RecipeForm({ existing }: RecipeFormProps) {
         description: '',
         source_url: '',
         cuisine: '',
-        tags: '',
         visibility: 'private',
-        rating: '',
+        is_vegetarian: false,
         notes: '',
         ingredients: [{ amount: '', unit: '', ingredient: '', note: '' }],
         steps: [{ description: '', duration_minutes: '' }],
@@ -100,7 +104,8 @@ export function RecipeForm({ existing }: RecipeFormProps) {
 
   const watchedVisibility = watch('visibility')
   const watchedDifficulty = watch('difficulty')
-  const watchedRating = watch('rating')
+  const watchedMealType = watch('meal_type')
+  const watchedVegetarian = watch('is_vegetarian')
 
   function onSubmit(values: RecipeFormValues) {
     setError(null)
@@ -151,10 +156,6 @@ export function RecipeForm({ existing }: RecipeFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="cuisine">Cuisine</Label>
             <Input id="cuisine" {...register('cuisine')} placeholder="Italian" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="tags">Tags</Label>
-            <Input id="tags" {...register('tags')} placeholder="pasta, quick, weeknight" />
           </div>
         </div>
 
@@ -207,6 +208,45 @@ export function RecipeForm({ existing }: RecipeFormProps) {
           </div>
         </div>
 
+        <div className="space-y-2">
+          <Label>Meal type</Label>
+          <div className="flex gap-2">
+            {MEAL_TYPES.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() =>
+                  setValue('meal_type', watchedMealType === value ? undefined : value)
+                }
+                className={cn(
+                  'flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
+                  watchedMealType === value
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-transparent text-foreground hover:bg-muted'
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Dietary</Label>
+          <button
+            type="button"
+            onClick={() => setValue('is_vegetarian', !watchedVegetarian)}
+            className={cn(
+              'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
+              watchedVegetarian
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-transparent text-foreground hover:bg-muted'
+            )}
+          >
+            Vegetarian
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="prep_minutes">Prep (min)</Label>
@@ -228,14 +268,6 @@ export function RecipeForm({ existing }: RecipeFormProps) {
               placeholder="30"
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Rating</Label>
-          <StarRating
-            value={watchedRating ? Number(watchedRating) : null}
-            onChange={(val) => setValue('rating', val)}
-          />
         </div>
       </section>
 

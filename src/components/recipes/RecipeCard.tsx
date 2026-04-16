@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { UtensilsCrossed, Clock, Eye, Lock, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { StarRating } from './StarRating'
 import { cn } from '@/lib/utils'
 import type { RecipeListItem, Difficulty } from '@/types/recipe'
 
@@ -28,8 +27,6 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe }: RecipeCardProps) {
   const totalTime = (recipe.prep_minutes ?? 0) + (recipe.cook_minutes ?? 0)
-  const visibleTags = recipe.tags.slice(0, 3)
-  const extraTags = recipe.tags.length - 3
 
   return (
     <Link href={`/recipes/${recipe.id}`} className="group block">
@@ -61,25 +58,6 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         <CardContent className="space-y-2 py-3">
           {/* Title */}
           <h3 className="line-clamp-2 font-medium leading-snug">{recipe.title}</h3>
-
-          {/* Stars */}
-          <StarRating value={recipe.rating} readOnly size="sm" />
-
-          {/* Tags */}
-          {recipe.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {visibleTags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {extraTags > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{extraTags}
-                </Badge>
-              )}
-            </div>
-          )}
 
           {/* Meta row */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

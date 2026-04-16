@@ -5,8 +5,8 @@ const LIST_COLUMNS = [
   'id',
   'title',
   'image_url',
-  'rating',
-  'tags',
+  'meal_type',
+  'is_vegetarian',
   'cuisine',
   'difficulty',
   'prep_minutes',
@@ -25,7 +25,8 @@ export async function getRecipes(
   const {
     cuisine,
     difficulty,
-    minRating,
+    mealType,
+    vegetarian,
     search,
     sortBy = 'created_at',
     sortDir = 'desc',
@@ -38,7 +39,8 @@ export async function getRecipes(
 
   if (cuisine) query = query.eq('cuisine', cuisine)
   if (difficulty) query = query.eq('difficulty', difficulty)
-  if (minRating) query = query.gte('rating', minRating)
+  if (mealType) query = query.eq('meal_type', mealType)
+  if (vegetarian) query = query.eq('is_vegetarian', true)
   if (search) query = query.ilike('title', `%${search}%`)
 
   query = query.order(sortBy, { ascending: sortDir === 'asc' })

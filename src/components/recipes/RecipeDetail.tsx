@@ -27,7 +27,6 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog'
-import { StarRating } from './StarRating'
 import { convertIngredients } from '@/lib/recipes/conversions'
 import { deleteRecipe } from '@/app/recipes/actions'
 import { cn } from '@/lib/utils'
@@ -128,7 +127,7 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
           )}
         </div>
 
-        {/* Time + rating */}
+        {/* Time */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           {recipe.prep_minutes != null && recipe.prep_minutes > 0 && (
             <span className="flex items-center gap-1.5">
@@ -148,19 +147,7 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
               Total: {totalTime} min
             </span>
           )}
-          <StarRating value={recipe.rating} readOnly />
         </div>
-
-        {/* Tags */}
-        {recipe.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {recipe.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
 
         {recipe.source_url && (
           <a

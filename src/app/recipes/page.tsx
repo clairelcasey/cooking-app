@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getRecipes } from '@/lib/recipes/queries'
 import { RecipeGrid } from '@/components/recipes/RecipeGrid'
 import { FilterPanel } from '@/components/recipes/FilterPanel'
-import type { RecipeFilters, Difficulty } from '@/types/recipe'
+import type { RecipeFilters, Difficulty, MealType } from '@/types/recipe'
 
 export default async function RecipesPage({
   searchParams,
@@ -28,25 +28,19 @@ export default async function RecipesPage({
 
   const filters: RecipeFilters = {
     search: str(params.search) || undefined,
-    cuisine: str(params.cuisine) || undefined,
     difficulty: (str(params.difficulty) as Difficulty) || undefined,
-    minRating: params.minRating ? Number(str(params.minRating)) : undefined,
+    mealType: (str(params.mealType) as MealType) || undefined,
+    vegetarian: params.vegetarian === 'true' ? true : undefined,
     sortBy: sortBy || 'created_at',
     sortDir: sortDir || 'desc',
   }
 
   const recipes = await getRecipes(supabase, user.id, filters)
 
-  // Derive unique cuisines for the filter panel
-  const allRecipes = await getRecipes(supabase, user.id, {})
-  const cuisines = [...new Set(allRecipes.map((r) => r.cuisine).filter(Boolean) as string[])]
-
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:gap-8 lg:items-start">
-      <FilterPanel cuisines={cuisines} />
-      <div className="min-w-0 flex-1">
-        <RecipeGrid recipes={recipes} />
-      </div>
+    <div className="flex flex-col gap-2">
+      <FilterPanel />
+      <RecipeGrid recipes={recipes} />
     </div>
   )
 }
