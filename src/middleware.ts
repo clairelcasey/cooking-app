@@ -36,10 +36,24 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const allowedEmails = (process.env.ALLOWED_EMAILS ?? '')
+    .split(',')
+    .map(e => e.trim())
+    .filter(Boolean)
+
+  if (user && allowedEmails.length > 0 && !allowedEmails.includes(user.email ?? '')) {
+    await supabase.auth.signOut()
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('error', 'unauthorized')
+    return NextResponse.redirect(url)
+  }
+
   if (
     !user &&
     (request.nextUrl.pathname.startsWith('/dashboard') ||
-      request.nextUrl.pathname.startsWith('/recipes'))
+      request.nextUrl.pathname.startsWith('/recipes') ||
+      request.nextUrl.pathname.startsWith('/planner'))
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
