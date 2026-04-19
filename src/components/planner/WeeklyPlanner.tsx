@@ -71,6 +71,8 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
         title: recipe.title,
         image_url: recipe.image_url,
         prep_minutes: recipe.prep_minutes,
+        nutrition: recipe.nutrition ?? {},
+        ingredients: recipe.ingredients ?? [],
       },
     }
     setEntries((prev) => [...prev, optimisticEntry])

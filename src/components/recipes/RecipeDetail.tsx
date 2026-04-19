@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dialog'
 import { convertIngredients } from '@/lib/recipes/conversions'
 import { deleteRecipe, patchRecipe } from '@/app/recipes/actions'
+import { NutritionBreakdown } from '@/components/recipes/NutritionBreakdown'
 import { cn } from '@/lib/utils'
 import type { Recipe, Ingredient, RecipeStep } from '@/types/recipe'
 
@@ -480,6 +481,20 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
       </div>
 
       <Separator />
+
+      {/* Nutrition breakdown */}
+      {localRecipe.nutrition && Object.keys(localRecipe.nutrition).length > 0 && (
+        <>
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">Nutrition</h2>
+            <NutritionBreakdown
+              nutrition={localRecipe.nutrition}
+              ingredients={localRecipe.ingredients}
+            />
+          </section>
+          <Separator />
+        </>
+      )}
 
       {/* Ingredients */}
       <section>

@@ -1,9 +1,10 @@
 'use client'
 
-import { addDays, format, isToday, parseISO } from 'date-fns'
+import { addDays, format, isToday } from 'date-fns'
 import { MealSlot } from './MealSlot'
+import { DayNutritionBar } from './DayNutritionBar'
 import { cn } from '@/lib/utils'
-import type { PlanEntry, MealSlot as MealSlotType } from '@/types/recipe'
+import type { Nutrition, PlanEntry, MealSlot as MealSlotType } from '@/types/recipe'
 
 const MEAL_SLOTS: MealSlotType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
@@ -34,6 +35,13 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: Pla
     return entries.find(
       (e) => e.entry_date === dateStr && e.meal_slot === mealSlot
     )
+  }
+
+  function getDayNutrition(date: Date): Nutrition[] {
+    const dateStr = format(date, 'yyyy-MM-dd')
+    return entries
+      .filter((e) => e.entry_date === dateStr && e.recipe?.nutrition)
+      .map((e) => e.recipe!.nutrition!)
   }
 
   // ─── Desktop layout: grid with meal-type label column ────────────────────────
@@ -70,6 +78,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: Pla
                 >
                   {format(day, 'd')}
                 </div>
+                <DayNutritionBar nutritionList={getDayNutrition(day)} className="mt-1" />
               </div>
             )
           })}
@@ -147,6 +156,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: Pla
                     Today
                   </span>
                 )}
+                <DayNutritionBar nutritionList={getDayNutrition(day)} className="mt-1" />
               </div>
 
               {/* Meal slots */}

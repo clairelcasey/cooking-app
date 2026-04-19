@@ -68,6 +68,9 @@ export type RecipeListItem = Pick<
   | 'cook_count'
   | 'last_cooked_at'
   | 'created_at'
+  | 'nutrition'
+  | 'health_score'
+  | 'ingredients'
 >
 
 export interface PlanEntry {
@@ -83,6 +86,8 @@ export interface PlanEntry {
     title: string
     image_url: string | null
     prep_minutes: number | null
+    nutrition: Nutrition
+    ingredients: Ingredient[]
   }
 }
 

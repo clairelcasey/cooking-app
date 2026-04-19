@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { lookupRecipeNutrition } from '@/lib/nutrition/lookup'
 import type { RecipeFormValues } from '@/lib/validations/recipe'
-import type { Ingredient, RecipeStep } from '@/types/recipe'
+import type { Ingredient, Nutrition, RecipeStep } from '@/types/recipe'
 
 function parseIngredients(raw: RecipeFormValues['ingredients']): Ingredient[] {
   return raw.map((ing) => ({
@@ -100,6 +101,19 @@ export async function createRecipe(
   if (error) return { error: error.message }
 
   revalidatePath('/recipes')
+
+  // Async nutrition lookup — best-effort, does not block the response
+  const ingredients = parseIngredients(formData.ingredients)
+  lookupRecipeNutrition(ingredients).then((result) => {
+    if (!result) return
+    createClient().then((sb) =>
+      sb
+        .from('recipes')
+        .update({ nutrition: result.nutrition, health_score: result.health_score })
+        .eq('id', data.id)
+    )
+  }).catch(() => {/* silently ignore nutrition lookup failures */})
+
   return { id: data.id }
 }
 
@@ -153,6 +167,19 @@ export async function updateRecipe(
 
   revalidatePath('/recipes')
   revalidatePath(`/recipes/${id}`)
+
+  // Async nutrition lookup — best-effort
+  const ingredients = parseIngredients(formData.ingredients)
+  lookupRecipeNutrition(ingredients).then((result) => {
+    if (!result) return
+    createClient().then((sb) =>
+      sb
+        .from('recipes')
+        .update({ nutrition: result.nutrition, health_score: result.health_score })
+        .eq('id', id)
+    )
+  }).catch(() => {/* silently ignore nutrition lookup failures */})
+
   return {}
 }
 
@@ -172,6 +199,8 @@ export async function patchRecipe(
     source_url: string | null
     ingredients: Ingredient[]
     steps: RecipeStep[]
+    nutrition: Nutrition
+    health_score: number | null
   }>
 ): Promise<{ error?: string }> {
   const supabase = await createClient()

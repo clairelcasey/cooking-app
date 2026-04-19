@@ -6,6 +6,7 @@ import { UtensilsCrossed, Clock, Eye, Lock, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { NutritionBreakdown } from './NutritionBreakdown'
 import type { RecipeListItem, Difficulty } from '@/types/recipe'
 
 function difficultyClass(d: Difficulty | null): string {
@@ -83,6 +84,13 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
               </span>
             )}
           </div>
+
+          {/* Nutrition breakdown (compact) */}
+          <NutritionBreakdown
+            compact
+            nutrition={recipe.nutrition}
+            ingredients={recipe.ingredients ?? []}
+          />
         </CardContent>
       </Card>
     </Link>

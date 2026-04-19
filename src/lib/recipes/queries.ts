@@ -15,6 +15,9 @@ const LIST_COLUMNS = [
   'cook_count',
   'last_cooked_at',
   'created_at',
+  'nutrition',
+  'health_score',
+  'ingredients',
 ].join(', ')
 
 export async function getRecipes(

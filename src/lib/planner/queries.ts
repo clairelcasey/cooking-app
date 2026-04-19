@@ -26,7 +26,7 @@ export async function getWeekPlan(
     .from('plan_entries')
     .select(
       `id, plan_id, entry_date, meal_slot, recipe_id, free_text_meal, status,
-       recipe:recipes(id, title, image_url, prep_minutes)`
+       recipe:recipes(id, title, image_url, prep_minutes, nutrition, ingredients)`
     )
     .eq('plan_id', plan.id)
     .order('entry_date', { ascending: true })
