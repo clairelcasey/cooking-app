@@ -340,7 +340,7 @@ Build in this sequence to avoid rework:
 5. **Weekly planner** — calendar UI + drag-and-drop with dnd-kit ✅
 6. **Recipe import** — URL + photo parsing via Claude API
 7. **Health scoring** — wire up USDA API, compute scores, display on planner
-8. **Cook mode** — full-screen step view with timers
+8. **Cook mode** — full-screen step view with timers ✅
 9. **Grocery list** — generate from planner, dedup logic, pantry filter
 10. **AI agent** — chat drawer + weekly nudges
 11. **Idea generator** — Claude-powered with disliked foods filter

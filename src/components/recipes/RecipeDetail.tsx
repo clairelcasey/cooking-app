@@ -19,6 +19,7 @@ import {
   Plus,
   ChevronUp,
   ChevronDown,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -232,15 +233,26 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
               Done editing
             </Button>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={handleStartEditing}
-            >
-              <Edit2 className="size-3.5" />
-              Edit
-            </Button>
+            <>
+              <Button
+                render={<Link href={`/recipes/${recipe.id}/cook`} />}
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+              >
+                <UtensilsCrossed className="size-3.5" />
+                Cook
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleStartEditing}
+              >
+                <Edit2 className="size-3.5" />
+                Edit
+              </Button>
+            </>
           )}
           <Button
             variant="outline"
