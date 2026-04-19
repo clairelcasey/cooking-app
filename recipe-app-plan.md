@@ -339,11 +339,11 @@ Build in this sequence to avoid rework:
 4. **Recipe library** — manual entry form + card grid display (no AI yet) ✅
 5. **Weekly planner** — calendar UI + drag-and-drop with dnd-kit ✅
 6. **Recipe import** — URL + photo parsing via Claude API
-7. **Cook mode** — full-screen step view with timers
-8. **Grocery list** — generate from planner, dedup logic, pantry filter
-9. **AI agent** — chat drawer + weekly nudges
-10. **Idea generator** — Claude-powered with disliked foods filter
-11. **Health scoring** — wire up USDA API, compute scores, display on planner
+7. **Health scoring** — wire up USDA API, compute scores, display on planner
+8. **Cook mode** — full-screen step view with timers
+9. **Grocery list** — generate from planner, dedup logic, pantry filter
+10. **AI agent** — chat drawer + weekly nudges
+11. **Idea generator** — Claude-powered with disliked foods filter
 12. **PWA** — service worker, offline caching, manifest
 13. **Public sharing links** — `/r/{slug}` routing
 14. **Family sharing** — invite flow, family_members table, shared recipe visibility

@@ -156,6 +156,49 @@ export async function updateRecipe(
   return {}
 }
 
+export async function patchRecipe(
+  id: string,
+  data: Partial<{
+    title: string
+    description: string | null
+    notes: string | null
+    cuisine: string | null
+    difficulty: 'easy' | 'medium' | 'hard' | null
+    meal_type: 'breakfast' | 'lunch' | 'dinner' | null
+    is_vegetarian: boolean
+    prep_minutes: number | null
+    cook_minutes: number | null
+    visibility: 'private' | 'family' | 'public'
+    source_url: string | null
+    ingredients: Ingredient[]
+    steps: RecipeStep[]
+  }>
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const { data: existing } = await supabase
+    .from('recipes')
+    .select('id, owner_id')
+    .eq('id', id)
+    .single()
+  if (!existing || existing.owner_id !== user.id) return { error: 'Not found' }
+
+  const { error } = await supabase
+    .from('recipes')
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/recipes')
+  revalidatePath(`/recipes/${id}`)
+  return {}
+}
+
 export async function deleteRecipe(id: string): Promise<{ error?: string }> {
   const supabase = await createClient()
   const {
