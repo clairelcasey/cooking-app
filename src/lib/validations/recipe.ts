@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const ingredientSchema = z.object({
   amount: z.string().min(1, 'Required'),
-  unit: z.string().min(1, 'Required'),
+  unit: z.string().optional(),
   ingredient: z.string().min(1, 'Required'),
   note: z.string().optional(),
 })

@@ -19,13 +19,14 @@ interface PlannerGridProps {
   entries: PlanEntry[]
   onAdd: (date: string, mealSlot: MealSlotType) => void
   onRemove: (entryId: string) => void
+  onDrop: (date: string, mealSlot: MealSlotType, recipeId: string) => void
 }
 
 function getWeekDays(weekStart: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 }
 
-export function PlannerGrid({ weekStart, entries, onAdd, onRemove }: PlannerGridProps) {
+export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: PlannerGridProps) {
   const days = getWeekDays(weekStart)
 
   function getEntry(date: Date, mealSlot: MealSlotType): PlanEntry | undefined {
@@ -78,9 +79,9 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove }: PlannerGrid
         {MEAL_SLOTS.map((slot) => (
           <div
             key={slot}
-            className="grid grid-cols-[80px_repeat(7,1fr)] gap-x-2 mb-2 items-start"
+            className="grid grid-cols-[80px_repeat(7,1fr)] gap-x-2 mb-1.5 items-center"
           >
-            <div className="flex h-full items-center py-1">
+            <div className="flex items-center py-1.5">
               <span className="text-xs font-semibold uppercase tracking-widest text-stone-400 pr-2 text-right w-full">
                 {MEAL_LABELS[slot]}
               </span>
@@ -95,6 +96,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove }: PlannerGrid
                   entry={getEntry(day, slot)}
                   onAdd={onAdd}
                   onRemove={onRemove}
+                  onDrop={onDrop}
                 />
               )
             })}
@@ -164,6 +166,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove }: PlannerGrid
                         entry={getEntry(day, slot)}
                         onAdd={onAdd}
                         onRemove={onRemove}
+                        onDrop={onDrop}
                       />
                     </div>
                   </div>

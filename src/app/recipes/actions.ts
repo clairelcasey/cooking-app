@@ -9,7 +9,7 @@ import type { Ingredient, RecipeStep } from '@/types/recipe'
 function parseIngredients(raw: RecipeFormValues['ingredients']): Ingredient[] {
   return raw.map((ing) => ({
     amount: isNaN(parseFloat(ing.amount)) ? ing.amount : parseFloat(ing.amount),
-    unit: ing.unit,
+    unit: ing.unit ?? '',
     ingredient: ing.ingredient,
     note: ing.note || undefined,
   }))
@@ -61,7 +61,8 @@ async function deleteImage(
 
 export async function createRecipe(
   formData: RecipeFormValues,
-  imageFile?: File
+  imageFile?: File,
+  existingImageUrl?: string
 ): Promise<{ error?: string; id?: string }> {
   const supabase = await createClient()
   const {
@@ -69,7 +70,7 @@ export async function createRecipe(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
-  let image_url: string | null = null
+  let image_url: string | null = existingImageUrl ?? null
   if (imageFile && imageFile.size > 0) {
     image_url = await uploadImage(supabase, user.id, imageFile)
   }

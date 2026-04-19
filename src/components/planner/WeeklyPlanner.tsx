@@ -2,16 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  DndContext,
-  DragOverlay,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from '@dnd-kit/core'
 import { addWeeks, subWeeks, addDays, format, parseISO } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PlannerGrid } from './PlannerGrid'
@@ -19,8 +9,6 @@ import { RecipeSidePanel } from './RecipeSidePanel'
 import { RecipePicker } from './RecipePicker'
 import { addPlanEntry, removePlanEntry } from '@/app/planner/actions'
 import type { PlanEntry, WeekPlan, RecipeListItem, MealSlot } from '@/types/recipe'
-
-const DRAGGABLE_PREFIX = 'recipe__'
 
 interface WeeklyPlannerProps {
   weekStart: string
@@ -35,23 +23,8 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
   const [entries, setEntries] = useState<PlanEntry[]>(initialPlan.entries)
   const planId = initialPlan.planId
 
-  // Recipe picker state
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pendingSlot, setPendingSlot] = useState<{ date: string; mealSlot: MealSlot } | null>(null)
-
-  // Drag state — resolved by ID lookup to avoid React 19 DataRef timing issues
-  const [activeDragRecipe, setActiveDragRecipe] = useState<RecipeListItem | null>(null)
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
-  )
-
-  function recipeFromDragId(id: string): RecipeListItem | undefined {
-    if (!id.startsWith(DRAGGABLE_PREFIX)) return undefined
-    const recipeId = id.slice(DRAGGABLE_PREFIX.length)
-    return recipes.find((r) => r.id === recipeId)
-  }
 
   // ─── Week navigation ────────────────────────────────────────────────────────
   function navigate(direction: 'prev' | 'next') {
@@ -68,11 +41,7 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
     setPickerOpen(true)
   }, [])
 
-  async function handlePickerSelect(
-    recipe: RecipeListItem,
-    date: string,
-    mealSlot: MealSlot
-  ) {
+  async function handlePickerSelect(recipe: RecipeListItem, date: string, mealSlot: MealSlot) {
     await assignRecipeToSlot(recipe, date, mealSlot)
   }
 
@@ -87,11 +56,7 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
   )
 
   // ─── Shared assign logic ─────────────────────────────────────────────────────
-  async function assignRecipeToSlot(
-    recipe: RecipeListItem,
-    date: string,
-    mealSlot: MealSlot
-  ) {
+  async function assignRecipeToSlot(recipe: RecipeListItem, date: string, mealSlot: MealSlot) {
     const tempId = `temp__${Date.now()}`
     const optimisticEntry: PlanEntry = {
       id: tempId,
@@ -121,35 +86,25 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
     }
   }
 
-  // ─── Drag handlers (use ID-based lookup, not data.current) ──────────────────
-  function handleDragStart(event: DragStartEvent) {
-    const recipe = recipeFromDragId(String(event.active.id))
-    setActiveDragRecipe(recipe ?? null)
-  }
+  // ─── Drag-and-drop (native HTML5) ────────────────────────────────────────────
+  const handleDrop = useCallback(
+    (date: string, mealSlot: MealSlot, recipeId: string, sourceEntryId?: string) => {
+      const recipe = recipes.find((r) => r.id === recipeId)
+      if (!recipe) return
+      const alreadyFilled = entries.some(
+        (e) => e.entry_date === date && e.meal_slot === mealSlot
+      )
+      if (alreadyFilled) return
 
-  async function handleDragEnd(event: DragEndEvent) {
-    setActiveDragRecipe(null)
-    const { active, over } = event
-    if (!over) return
+      if (sourceEntryId) {
+        setEntries((prev) => prev.filter((e) => e.id !== sourceEntryId))
+        removePlanEntry(sourceEntryId)
+      }
 
-    const recipe = recipeFromDragId(String(active.id))
-    if (!recipe) return
-
-    // over.id format: "2026-04-14__breakfast"
-    const overId = String(over.id)
-    const sep = overId.indexOf('__')
-    if (sep === -1) return
-    const date = overId.slice(0, sep)
-    const mealSlot = overId.slice(sep + 2) as MealSlot
-    if (!date || !mealSlot) return
-
-    const alreadyFilled = entries.some(
-      (e) => e.entry_date === date && e.meal_slot === mealSlot
-    )
-    if (alreadyFilled) return
-
-    await assignRecipeToSlot(recipe, date, mealSlot)
-  }
+      assignRecipeToSlot(recipe, date, mealSlot)
+    },
+    [recipes, entries]
+  )
 
   const weekEnd = addDays(currentWeekStart, 6)
   const formattedRange =
@@ -158,11 +113,7 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
       : `${format(currentWeekStart, 'MMM d, yyyy')} – ${format(weekEnd, 'MMM d, yyyy')}`
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <>
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -188,11 +139,6 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
         </div>
       </div>
 
-      {/* Health score placeholder bar */}
-      <div className="mb-5 h-2 w-full overflow-hidden rounded-full bg-stone-100">
-        <div className="h-full w-full bg-gradient-to-r from-red-200 via-amber-200 to-emerald-300 opacity-60" />
-      </div>
-
       {/* Main content: grid + side panel */}
       <div className="flex gap-4 items-start">
         <div className="min-w-0 flex-1">
@@ -201,6 +147,7 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
             entries={entries}
             onAdd={handleOpenPicker}
             onRemove={handleRemove}
+            onDrop={handleDrop}
           />
         </div>
         <RecipeSidePanel recipes={recipes} />
@@ -214,17 +161,6 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
         pendingSlot={pendingSlot}
         onSelect={handlePickerSelect}
       />
-
-      {/* Drag overlay — floating card that follows the cursor */}
-      <DragOverlay dropAnimation={null}>
-        {activeDragRecipe ? (
-          <div className="rounded-lg border border-stone-300 bg-white px-3 py-2 shadow-xl opacity-95 cursor-grabbing">
-            <span className="text-sm font-medium text-stone-800">
-              {activeDragRecipe.title}
-            </span>
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+    </>
   )
 }

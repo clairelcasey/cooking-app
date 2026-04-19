@@ -282,6 +282,11 @@ const response = await fetch("https://api.anthropic.com/v1/messages", {
 
 Store all recipe ingredients in metric (grams, ml) as the source of truth. Display in user's preferred unit system. Conversion happens at render time, never mutates stored data.
 
+> **Open questions to think through:**
+> - **Preview-only mode**: Should users be able to enter a recipe (or import one) without saving, just to preview the nutrition metrics? Could be a lightweight "try before you save" flow.
+> - **Default unit preference**: Add a setting in user profile for preferred unit system (metric vs US/imperial). When importing or entering a recipe, the display defaults to that preference. We already plan to store everything as metric internally — this would just control how it's shown.
+> - **Do we save both metric and US values?** Current plan: store metric only, convert at render time. This is simpler and avoids drift. The alternative (storing both) adds write complexity and sync risk if values ever diverge. Lean toward store-once-convert-at-render unless there's a performance reason not to.
+
 ```javascript
 // Simple conversion lookup — no AI needed
 const CONVERSIONS = {
@@ -331,10 +336,10 @@ Build in this sequence to avoid rework:
 1. **Supabase setup** — run schema SQL, configure RLS, set up auth providers ✅
 2. **Next.js scaffold** — `npx create-next-app`, add Tailwind + shadcn, wire Supabase client ✅
 3. **Auth** — login/signup pages, session handling, protected routes ✅
-4. **Recipe library** — manual entry form + card grid display (no AI yet)
-5. **Weekly planner** — calendar UI + drag-and-drop with dnd-kit
-6. **Cook mode** — full-screen step view with timers
-7. **Recipe import** — URL + photo parsing via Claude API
+4. **Recipe library** — manual entry form + card grid display (no AI yet) ✅
+5. **Weekly planner** — calendar UI + drag-and-drop with dnd-kit ✅
+6. **Recipe import** — URL + photo parsing via Claude API
+7. **Cook mode** — full-screen step view with timers
 8. **Grocery list** — generate from planner, dedup logic, pantry filter
 9. **AI agent** — chat drawer + weekly nudges
 10. **Idea generator** — Claude-powered with disliked foods filter

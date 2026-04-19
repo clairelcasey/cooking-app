@@ -38,9 +38,11 @@ const VISIBILITIES: { value: Visibility; label: string; icon: React.ReactNode }[
 
 interface RecipeFormProps {
   existing?: Recipe
+  prefill?: Partial<RecipeFormValues>
+  existingImageUrl?: string
 }
 
-export function RecipeForm({ existing }: RecipeFormProps) {
+export function RecipeForm({ existing, prefill, existingImageUrl }: RecipeFormProps) {
   const router = useRouter()
   const imageFileRef = useRef<File | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -86,6 +88,7 @@ export function RecipeForm({ existing }: RecipeFormProps) {
         notes: '',
         ingredients: [{ amount: '', unit: '', ingredient: '', note: '' }],
         steps: [{ description: '', duration_minutes: '' }],
+        ...prefill,
       }
 
   const form = useForm<RecipeFormValues>({
@@ -118,7 +121,7 @@ export function RecipeForm({ existing }: RecipeFormProps) {
         }
         router.push(`/recipes/${existing.id}`)
       } else {
-        const result = await createRecipe(values, imageFileRef.current ?? undefined)
+        const result = await createRecipe(values, imageFileRef.current ?? undefined, existingImageUrl)
         if (result.error) {
           setError(result.error)
           return
