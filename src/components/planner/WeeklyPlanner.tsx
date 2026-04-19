@@ -7,8 +7,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PlannerGrid } from './PlannerGrid'
 import { RecipeSidePanel } from './RecipeSidePanel'
 import { RecipePicker } from './RecipePicker'
-import { addPlanEntry, removePlanEntry } from '@/app/planner/actions'
-import type { PlanEntry, WeekPlan, RecipeListItem, MealSlot } from '@/types/recipe'
+import { addPlanEntry, addQuickAddEntry, removePlanEntry } from '@/app/planner/actions'
+import type { Nutrition, PlanEntry, WeekPlan, RecipeListItem, MealSlot } from '@/types/recipe'
 
 interface WeeklyPlannerProps {
   weekStart: string
@@ -53,6 +53,35 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
       if (result.error) router.refresh()
     },
     [router]
+  )
+
+  // ─── Quick-add (free-text + nutrition) ──────────────────────────────────────
+  const handleQuickAdd = useCallback(
+    async (date: string, mealSlot: MealSlot, name: string, nutrition: Nutrition) => {
+      const tempId = `temp__${Date.now()}`
+      const optimisticEntry: PlanEntry = {
+        id: tempId,
+        plan_id: planId,
+        entry_date: date,
+        meal_slot: mealSlot,
+        recipe_id: null,
+        free_text_meal: name,
+        status: 'planned',
+        nutrition,
+      }
+      setEntries((prev) => [...prev, optimisticEntry])
+
+      const result = await addQuickAddEntry(planId, date, mealSlot, name, nutrition)
+      if (result.error || !result.id) {
+        setEntries((prev) => prev.filter((e) => e.id !== tempId))
+        router.refresh()
+      } else {
+        setEntries((prev) =>
+          prev.map((e) => (e.id === tempId ? { ...e, id: result.id! } : e))
+        )
+      }
+    },
+    [planId, router]
   )
 
   // ─── Shared assign logic ─────────────────────────────────────────────────────
@@ -148,6 +177,7 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
             weekStart={currentWeekStart}
             entries={entries}
             onAdd={handleOpenPicker}
+            onQuickAdd={handleQuickAdd}
             onRemove={handleRemove}
             onDrop={handleDrop}
           />

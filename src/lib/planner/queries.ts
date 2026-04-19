@@ -25,7 +25,7 @@ export async function getWeekPlan(
   const { data: entries, error: entriesError } = await supabase
     .from('plan_entries')
     .select(
-      `id, plan_id, entry_date, meal_slot, recipe_id, free_text_meal, status,
+      `id, plan_id, entry_date, meal_slot, recipe_id, free_text_meal, nutrition, status,
        recipe:recipes(id, title, image_url, prep_minutes, nutrition, ingredients)`
     )
     .eq('plan_id', plan.id)

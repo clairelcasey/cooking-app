@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { MealSlot } from '@/types/recipe'
+import type { MealSlot, Nutrition } from '@/types/recipe'
 
 export async function addPlanEntry(
   planId: string,
@@ -21,6 +21,37 @@ export async function addPlanEntry(
       entry_date: entryDate,
       meal_slot: mealSlot,
       recipe_id: recipeId,
+      status: 'planned',
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/planner')
+  return { id: data.id }
+}
+
+export async function addQuickAddEntry(
+  planId: string,
+  entryDate: string,
+  mealSlot: MealSlot,
+  name: string,
+  nutrition: Nutrition
+): Promise<{ error?: string; id?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const { data, error } = await supabase
+    .from('plan_entries')
+    .insert({
+      plan_id: planId,
+      entry_date: entryDate,
+      meal_slot: mealSlot,
+      free_text_meal: name,
+      recipe_id: null,
+      nutrition,
       status: 'planned',
     })
     .select('id')

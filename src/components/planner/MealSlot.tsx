@@ -1,20 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Plus } from 'lucide-react'
+import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { PlanEntry, MealSlot as MealSlotType } from '@/types/recipe'
+import { QuickAddPopover } from './QuickAddPopover'
+import type { Nutrition, PlanEntry, MealSlot as MealSlotType } from '@/types/recipe'
 
 interface MealSlotProps {
   date: string
   mealSlot: MealSlotType
   entry: PlanEntry | undefined
   onAdd: (date: string, mealSlot: MealSlotType) => void
+  onQuickAdd: (date: string, mealSlot: MealSlotType, name: string, nutrition: Nutrition) => void
   onRemove: (entryId: string) => void
   onDrop: (date: string, mealSlot: MealSlotType, recipeId: string, sourceEntryId?: string) => void
 }
 
-export function MealSlot({ date, mealSlot, entry, onAdd, onRemove, onDrop }: MealSlotProps) {
+export function MealSlot({ date, mealSlot, entry, onAdd, onQuickAdd, onRemove, onDrop }: MealSlotProps) {
   const [isDragOver, setIsDragOver] = useState(false)
 
   const dropProps = {
@@ -59,23 +61,20 @@ export function MealSlot({ date, mealSlot, entry, onAdd, onRemove, onDrop }: Mea
   }
 
   return (
-    <button
+    <div
       {...dropProps}
-      onClick={() => onAdd(date, mealSlot)}
       className={cn(
-        'group flex min-h-[60px] w-full items-center justify-center rounded-lg border border-dashed transition-all',
-        isDragOver
-          ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-400'
-          : 'border-stone-300 hover:border-stone-400 hover:bg-stone-50'
+        'w-full rounded-lg transition-all',
+        isDragOver ? 'ring-2 ring-amber-400' : ''
       )}
-      aria-label={`Add ${mealSlot}`}
     >
-      <Plus
-        className={cn(
-          'size-4 transition-opacity',
-          isDragOver ? 'opacity-100 text-amber-500' : 'text-stone-400 opacity-0 group-hover:opacity-100 sm:opacity-100'
-        )}
+      <QuickAddPopover
+        date={date}
+        mealSlot={mealSlot}
+        isDragOver={isDragOver}
+        onQuickAdd={onQuickAdd}
+        onOpenRecipePicker={onAdd}
       />
-    </button>
+    </div>
   )
 }

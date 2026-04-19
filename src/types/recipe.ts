@@ -81,6 +81,7 @@ export interface PlanEntry {
   recipe_id: string | null
   free_text_meal: string | null
   status: 'planned' | 'cooked' | 'skipped'
+  nutrition?: Nutrition
   recipe?: {
     id: string
     title: string

@@ -19,6 +19,7 @@ interface PlannerGridProps {
   weekStart: Date
   entries: PlanEntry[]
   onAdd: (date: string, mealSlot: MealSlotType) => void
+  onQuickAdd: (date: string, mealSlot: MealSlotType, name: string, nutrition: Nutrition) => void
   onRemove: (entryId: string) => void
   onDrop: (date: string, mealSlot: MealSlotType, recipeId: string) => void
 }
@@ -27,7 +28,7 @@ function getWeekDays(weekStart: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 }
 
-export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: PlannerGridProps) {
+export function PlannerGrid({ weekStart, entries, onAdd, onQuickAdd, onRemove, onDrop }: PlannerGridProps) {
   const days = getWeekDays(weekStart)
 
   function getEntry(date: Date, mealSlot: MealSlotType): PlanEntry | undefined {
@@ -40,8 +41,9 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: Pla
   function getDayNutrition(date: Date): Nutrition[] {
     const dateStr = format(date, 'yyyy-MM-dd')
     return entries
-      .filter((e) => e.entry_date === dateStr && e.recipe?.nutrition)
-      .map((e) => e.recipe!.nutrition!)
+      .filter((e) => e.entry_date === dateStr)
+      .map((e) => e.recipe?.nutrition ?? e.nutrition)
+      .filter((n): n is Nutrition => !!n && Object.keys(n).length > 0)
   }
 
   // ─── Desktop layout: grid with meal-type label column ────────────────────────
@@ -104,6 +106,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: Pla
                   mealSlot={slot}
                   entry={getEntry(day, slot)}
                   onAdd={onAdd}
+                  onQuickAdd={onQuickAdd}
                   onRemove={onRemove}
                   onDrop={onDrop}
                 />
@@ -175,6 +178,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onRemove, onDrop }: Pla
                         mealSlot={slot}
                         entry={getEntry(day, slot)}
                         onAdd={onAdd}
+                        onQuickAdd={onQuickAdd}
                         onRemove={onRemove}
                         onDrop={onDrop}
                       />
