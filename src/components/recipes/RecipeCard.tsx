@@ -60,7 +60,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
           <h3 className="line-clamp-2 font-medium leading-snug">{recipe.title}</h3>
 
           {/* Meta row */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             {totalTime > 0 && (
               <span className="flex items-center gap-1">
                 <Clock className="size-3" />
@@ -75,6 +75,11 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
                 )}
               >
                 {recipe.difficulty}
+              </span>
+            )}
+            {recipe.is_vegetarian && (
+              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                Vegetarian
               </span>
             )}
           </div>

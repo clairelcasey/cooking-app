@@ -12,18 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import type { Difficulty, MealType } from '@/types/recipe'
+import type { Difficulty } from '@/types/recipe'
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: 'easy', label: 'Easy' },
   { value: 'medium', label: 'Medium' },
   { value: 'hard', label: 'Hard' },
-]
-
-const MEAL_TYPES: { value: MealType; label: string }[] = [
-  { value: 'breakfast', label: 'Breakfast' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'dinner', label: 'Dinner' },
 ]
 
 const SORT_OPTIONS = [
@@ -45,7 +39,6 @@ export function FilterPanel() {
 
   const currentSearch = getParam('search')
   const currentDifficulty = getParam('difficulty') as Difficulty | ''
-  const currentMealType = getParam('mealType') as MealType | ''
   const currentVegetarian = getParam('vegetarian') === 'true'
   const currentSort = getParam('sort') || 'created_at:desc'
 
@@ -73,7 +66,6 @@ export function FilterPanel() {
   const hasFilters = !!(
     currentSearch ||
     currentDifficulty ||
-    currentMealType ||
     currentVegetarian ||
     currentSort !== 'created_at:desc'
   )
@@ -111,26 +103,8 @@ export function FilterPanel() {
         </Select>
       </div>
 
-      {/* Row 2: meal type + vegetarian + difficulty */}
+      {/* Row 2: vegetarian + difficulty */}
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {MEAL_TYPES.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() =>
-              updateParams({ mealType: currentMealType === value ? '' : value })
-            }
-            className={cn(
-              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-              currentMealType === value
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-transparent text-foreground hover:bg-muted'
-            )}
-          >
-            {label}
-          </button>
-        ))}
-
         <button
           type="button"
           onClick={() => updateParams({ vegetarian: currentVegetarian ? '' : 'true' })}

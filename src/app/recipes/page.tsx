@@ -1,9 +1,18 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getRecipes } from '@/lib/recipes/queries'
-import { RecipeGrid } from '@/components/recipes/RecipeGrid'
 import { FilterPanel } from '@/components/recipes/FilterPanel'
-import type { RecipeFilters, Difficulty, MealType } from '@/types/recipe'
+import { RecipeGroupedView } from '@/components/recipes/RecipeGroupedView'
+import type { RecipeFilters, Difficulty, MealType, RecipeListItem } from '@/types/recipe'
+
+function groupByMealType(recipes: RecipeListItem[]): Record<MealType | 'other', RecipeListItem[]> {
+  return {
+    breakfast: recipes.filter((r) => r.meal_type === 'breakfast'),
+    lunch: recipes.filter((r) => r.meal_type === 'lunch'),
+    dinner: recipes.filter((r) => r.meal_type === 'dinner'),
+    other: recipes.filter((r) => r.meal_type === null),
+  }
+}
 
 export default async function RecipesPage({
   searchParams,
@@ -29,18 +38,18 @@ export default async function RecipesPage({
   const filters: RecipeFilters = {
     search: str(params.search) || undefined,
     difficulty: (str(params.difficulty) as Difficulty) || undefined,
-    mealType: (str(params.mealType) as MealType) || undefined,
     vegetarian: params.vegetarian === 'true' ? true : undefined,
     sortBy: sortBy || 'created_at',
     sortDir: sortDir || 'desc',
   }
 
   const recipes = await getRecipes(supabase, user.id, filters)
+  const groups = groupByMealType(recipes)
 
   return (
     <div className="flex flex-col gap-2">
       <FilterPanel />
-      <RecipeGrid recipes={recipes} />
+      <RecipeGroupedView groups={groups} />
     </div>
   )
 }
