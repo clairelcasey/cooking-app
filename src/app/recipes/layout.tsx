@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { RecipesNav } from './RecipesNav'
+import { AppNav } from '@/components/AppNav'
 
 export default async function RecipesLayout({
   children,
@@ -14,9 +14,12 @@ export default async function RecipesLayout({
 
   if (!user) redirect('/login')
 
+  const name = user.user_metadata?.full_name as string | undefined
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined
+
   return (
     <div className="min-h-dvh bg-background">
-      <RecipesNav />
+      <AppNav userName={name} userAvatarUrl={avatarUrl} />
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
     </div>
   )
