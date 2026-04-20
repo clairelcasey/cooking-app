@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChefHat, CalendarDays, Plus, LogOut, Link2, Camera, FileText, PenLine, ChevronDown } from 'lucide-react'
+import { ChefHat, CalendarDays, ShoppingCart, Plus, LogOut, Link2, Camera, FileText, PenLine, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/app/auth/actions'
@@ -72,6 +72,19 @@ export function AppNav({ userName, userAvatarUrl }: AppNavProps) {
             >
               <CalendarDays className="size-4" />
               <span className="hidden sm:inline">Planner</span>
+            </Link>
+
+            <Link
+              href="/grocery"
+              className={cn(
+                'flex items-center gap-2 pb-1 text-sm font-medium border-b-2 transition-colors hover:text-foreground',
+                pathname.startsWith('/grocery')
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground'
+              )}
+            >
+              <ShoppingCart className="size-4" />
+              <span className="hidden sm:inline">Grocery</span>
             </Link>
           </nav>
 
