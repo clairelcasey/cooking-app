@@ -30,7 +30,7 @@ function CollapsibleSection({ label, recipes }: MealGroup) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 py-2 text-left"
+        className="flex w-full cursor-pointer items-center gap-2 py-2 text-left"
       >
         <h2 className="text-base font-semibold">{label}</h2>
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">

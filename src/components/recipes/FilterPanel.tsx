@@ -109,7 +109,7 @@ export function FilterPanel() {
           type="button"
           onClick={() => updateParams({ vegetarian: currentVegetarian ? '' : 'true' })}
           className={cn(
-            'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+            'cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors',
             currentVegetarian
               ? 'border-primary bg-primary text-primary-foreground'
               : 'border-border bg-transparent text-foreground hover:bg-muted'
@@ -128,7 +128,7 @@ export function FilterPanel() {
               updateParams({ difficulty: currentDifficulty === value ? '' : value })
             }
             className={cn(
-              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+              'cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors',
               currentDifficulty === value
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border bg-transparent text-foreground hover:bg-muted'
@@ -142,7 +142,7 @@ export function FilterPanel() {
           <button
             type="button"
             onClick={() => router.replace('/recipes')}
-            className="flex items-center gap-1 rounded-full border border-dashed border-muted-foreground/50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+            className="flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-muted-foreground/50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
           >
             <X className="size-3" />
             Clear
