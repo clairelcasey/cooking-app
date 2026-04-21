@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PlannerGrid } from './PlannerGrid'
 import { RecipeSidePanel } from './RecipeSidePanel'
 import { RecipePicker } from './RecipePicker'
+import { NudgeBanner } from './NudgeBanner'
 import { addPlanEntry, addQuickAddEntry, removePlanEntry } from '@/app/planner/actions'
 import type { Nutrition, PlanEntry, WeekPlan, RecipeListItem, MealSlot } from '@/types/recipe'
 
@@ -169,6 +170,16 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
           </button>
         </div>
       </div>
+
+      {/* Nutrition nudge banner */}
+      <NudgeBanner
+        weekStart={weekStart}
+        entries={entries}
+        recipes={recipes}
+        onOpenAgent={(message) => {
+          window.dispatchEvent(new CustomEvent('open-agent', { detail: { message } }))
+        }}
+      />
 
       {/* Main content: grid + side panel */}
       <div className="flex gap-4 items-start">

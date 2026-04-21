@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChefHat, CalendarDays, ShoppingCart, Plus, LogOut, Link2, Camera, FileText, PenLine, ChevronDown } from 'lucide-react'
+import { ChefHat, CalendarDays, ShoppingCart, Plus, LogOut, Link2, Camera, FileText, PenLine, ChevronDown, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/app/auth/actions'
 import { ImportDialog } from '@/components/recipes/ImportDialog'
+import { AgentDrawer } from '@/components/agent/AgentDrawer'
 
 interface AppNavProps {
   userName?: string
@@ -32,6 +33,14 @@ export function AppNav({ userName, userAvatarUrl }: AppNavProps) {
   const [avatarOpen, setAvatarOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [importTab, setImportTab] = useState<'url' | 'photo' | 'text'>('url')
+  const [chatOpen, setChatOpen] = useState(false)
+
+  // Open drawer when banners fire the open-agent event
+  useEffect(() => {
+    function handler() { setChatOpen(true) }
+    window.addEventListener('open-agent', handler)
+    return () => window.removeEventListener('open-agent', handler)
+  }, [])
 
   function openImport(tab: 'url' | 'photo' | 'text') {
     setImportTab(tab)
@@ -143,6 +152,20 @@ export function AppNav({ userName, userAvatarUrl }: AppNavProps) {
               </div>
             )}
 
+            {/* Chat button */}
+            <button
+              onClick={() => setChatOpen((v) => !v)}
+              className={cn(
+                'flex size-8 items-center justify-center rounded-full transition-colors',
+                chatOpen
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+              aria-label="Open cooking assistant"
+            >
+              <MessageSquare className="size-4" />
+            </button>
+
             {/* Avatar menu */}
             <div className="relative">
               <button
@@ -202,6 +225,8 @@ export function AppNav({ userName, userAvatarUrl }: AppNavProps) {
         onOpenChange={setImportOpen}
         initialTab={importTab}
       />
+
+      <AgentDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
     </>
   )
 }

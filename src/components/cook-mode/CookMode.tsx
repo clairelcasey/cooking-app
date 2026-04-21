@@ -10,12 +10,14 @@ import type { Recipe } from '@/types/recipe'
 
 interface CookModeProps {
   recipe: Recipe
+  initialScaleFactor?: ScaleFactor
+  onClose?: () => void
 }
 
-export function CookMode({ recipe }: CookModeProps) {
+export function CookMode({ recipe, initialScaleFactor, onClose }: CookModeProps) {
   const router = useRouter()
   const [phase, setPhase] = useState<'overview' | 'steps'>('overview')
-  const [scaleFactor, setScaleFactor] = useState<ScaleFactor>(1)
+  const [scaleFactor, setScaleFactor] = useState<ScaleFactor>(initialScaleFactor ?? 1)
   const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric')
   const [activeStep, setActiveStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
@@ -68,7 +70,11 @@ export function CookMode({ recipe }: CookModeProps) {
   }
 
   function handleClose() {
-    router.push(`/recipes/${recipe.id}`)
+    if (onClose) {
+      onClose()
+    } else {
+      router.push(`/recipes/${recipe.id}`)
+    }
   }
 
   return (

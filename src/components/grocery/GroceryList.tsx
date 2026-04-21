@@ -167,6 +167,37 @@ export function GroceryList({
         </div>
       </div>
 
+      {/* Grocery insight banner */}
+      {active.length > 0 && (() => {
+        const hasProteins = active.some(i => i.category === 'proteins')
+        const produceCount = active.filter(i => i.category === 'produce').length
+        const gap = !hasProteins
+          ? 'No proteins on your list this week.'
+          : produceCount < 3
+          ? 'Less than 3 produce items on your list.'
+          : null
+
+        if (!gap) return null
+
+        const prompt = !hasProteins
+          ? "My grocery list has no proteins this week. What should I add based on my meal plan?"
+          : "My grocery list is low on produce. What vegetables or fruits should I add?"
+
+        return (
+          <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-3 text-sm dark:border-sky-800/40 dark:bg-sky-950/20">
+            <p className="text-sky-800 dark:text-sky-300">
+              <span className="font-medium">Heads up:</span> {gap}
+            </p>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-agent', { detail: { message: prompt } }))}
+              className="mt-1.5 text-xs font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
+            >
+              Ask the assistant →
+            </button>
+          </div>
+        )
+      })()}
+
       {/* Empty state */}
       {active.length === 0 && checked.length === 0 && inPantry.length === 0 && (
         <div className="py-16 text-center text-muted-foreground">
