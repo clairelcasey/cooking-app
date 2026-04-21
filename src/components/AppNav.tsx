@@ -55,8 +55,15 @@ export function AppNav({ userName, userAvatarUrl }: AppNavProps) {
     <>
       <header className="relative z-30 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          {/* Left: nav links */}
+          {/* Left: wordmark + nav links */}
           <nav className="flex items-center gap-6">
+            <Link
+              href="/dashboard"
+              className="text-base font-bold tracking-tight text-foreground hover:opacity-80 transition-opacity"
+            >
+              Preppy
+            </Link>
+
             <Link
               href="/recipes"
               className={cn(
