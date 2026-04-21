@@ -196,10 +196,23 @@ create policy "grocery_lists: own" on grocery_lists for all using (auth.uid() = 
 - Tap to expand: full recipe, metric/imperial toggle (preference saved per user), edit mode, notes
 - Import methods:
   - **URL**: fetch HTML → send to Claude → extract structured recipe
-  - **Photo**: upload image → Claude vision → extract structured recipe
+  - **Photo**: upload image → Claude vision → extract structured recipe. The uploaded photo is saved as the recipe's primary `image_url`, the same way URL import preserves `source_url`. It pre-fills in the review form and persists to the recipe on save.
   - **Manual**: form with structured ingredient/step entry
 - Fallback for blocked scrapers: "paste the recipe text" input → Claude parses it
 - Cook mode: full-screen step-by-step view, timers per step, screen stay-awake (via WakeLock API)
+- **Multiple images per recipe**: recipes support a gallery of photos (hero shot + step/plating photos)
+  - Data model: add `images jsonb default '[]'` to `recipes` table — array of `{url, caption?, order}` objects. Existing `image_url` stays as the primary image for backwards compatibility; additional images go in the array.
+  - UI: `ImageUpload` component extended to allow adding more photos after the primary; displayed as a scrollable thumbnail strip in recipe detail view
+  - Import: the photo used for import is saved as the primary image; additional photos can be added post-import in the edit form
+  - Storage: same Supabase `recipe-images` bucket, path `{user_id}/{recipe_id}/{timestamp}.{ext}`
+
+#### External recipe API options
+
+- **NYT Cooking**: No official public API. August 2023 ToS explicitly prohibits automated scraping — do not pursue.
+- **TheMealDB**: Completely free, no restrictions, 283 curated meals with images. Good for a "discover recipes" feature.
+- **Edamam**: Free tier (10k calls/month), 2.3M+ recipes, strong nutrition data. Best option if adding "import from external database."
+- **Spoonacular**: Comprehensive food/nutrition API, free tier available.
+- For now: keep the three existing import methods (URL, photo, paste). External API import can be added as a Phase 2 feature.
 
 ### 2. Weekly / Monthly Planner
 - **View toggle: Week / Month** — persisted as user preference
@@ -218,8 +231,9 @@ create policy "grocery_lists: own" on grocery_lists for all using (auth.uid() = 
 - **Data model unchanged** — `plan_entries` is already date-based; week vs month is just a different query date range
 
 ### 3. Grocery List
-- Auto-generated from all planned recipe ingredients for the week
-- Smart deduplication and quantity merging across recipes
+- **Recipe selection mode**: browse your recipe library, check off which recipes to include, then generate the combined list. Works independently of the planner.
+- **Planner shortcut**: the "generate grocery list" button on the weekly planner opens the picker with that week's planned recipes pre-selected — the user can add or remove recipes before generating.
+- Smart deduplication and quantity merging across selected recipes
 - Pantry staples filtered out automatically (user-defined list)
 - Grouped by category (produce, proteins, dairy, pantry, etc.)
 - Check off items in-app while shopping
@@ -341,7 +355,8 @@ Build in this sequence to avoid rework:
 6. **Recipe import** — URL + photo parsing via Claude API
 7. **Health scoring** — wire up USDA API, compute scores, display on planner
 8. **Cook mode** — full-screen step view with timers ✅
-9. **Grocery list** — generate from planner, dedup logic, pantry filter
+8b. **Multi-image support** — schema migration (`images` JSONB column), extend `ImageUpload` component, update `RecipeForm` and `actions.ts`
+9. **Grocery list** — recipe selection picker, dedup logic, pantry filter, planner shortcut ✅
 10. **AI agent** — chat drawer + weekly nudges
 11. **Idea generator** — Claude-powered with disliked foods filter
 12. **PWA** — service worker, offline caching, manifest
