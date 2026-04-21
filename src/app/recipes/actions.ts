@@ -225,6 +225,20 @@ export async function patchRecipe(
 
   revalidatePath('/recipes')
   revalidatePath(`/recipes/${id}`)
+
+  // Re-calculate nutrition when ingredients change
+  if (data.ingredients) {
+    lookupRecipeNutrition(data.ingredients).then((result) => {
+      if (!result) return
+      createClient().then((sb) =>
+        sb
+          .from('recipes')
+          .update({ nutrition: result.nutrition, health_score: result.health_score })
+          .eq('id', id)
+      )
+    }).catch(() => {/* silently ignore nutrition lookup failures */})
+  }
+
   return {}
 }
 

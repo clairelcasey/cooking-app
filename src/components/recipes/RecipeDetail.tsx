@@ -20,6 +20,8 @@ import {
   ChevronUp,
   ChevronDown,
   UtensilsCrossed,
+  RefreshCw,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -50,6 +52,7 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
   const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [nutritionStatus, setNutritionStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
 
   // Inline editing
   const [isEditing, setIsEditing] = useState(false)
@@ -175,6 +178,26 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
       await deleteRecipe(recipe.id)
       router.push('/recipes')
     })
+  }
+
+  async function handleCalculateNutrition() {
+    setNutritionStatus('loading')
+    try {
+      const res = await fetch('/api/nutrition/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients: localRecipe.ingredients }),
+      })
+      if (!res.ok) throw new Error('Lookup failed')
+      const result = await res.json()
+      const patch = { nutrition: result.nutrition, health_score: result.health_score }
+      const saveResult = await patchRecipe(recipe.id, patch)
+      if (saveResult.error) throw new Error(saveResult.error)
+      setLocalRecipe((r) => ({ ...r, ...patch }))
+      setNutritionStatus('done')
+    } catch {
+      setNutritionStatus('error')
+    }
   }
 
   return (
@@ -495,14 +518,55 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
       <Separator />
 
       {/* Nutrition breakdown */}
-      {localRecipe.nutrition && Object.keys(localRecipe.nutrition).length > 0 && (
+      {localRecipe.nutrition && Object.keys(localRecipe.nutrition).length > 0 ? (
         <>
           <section>
-            <h2 className="mb-3 text-lg font-semibold">Nutrition</h2>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Nutrition</h2>
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={handleCalculateNutrition}
+                  disabled={nutritionStatus === 'loading'}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  title="Recalculate nutrition"
+                >
+                  <RefreshCw className={cn('size-3.5', nutritionStatus === 'loading' && 'animate-spin')} />
+                  {nutritionStatus === 'loading' ? 'Calculating…' : 'Recalculate'}
+                </button>
+              )}
+            </div>
+            {nutritionStatus === 'error' && (
+              <p className="mb-2 text-xs text-destructive">Could not calculate nutrition. Try again.</p>
+            )}
             <NutritionBreakdown
               nutrition={localRecipe.nutrition}
               ingredients={localRecipe.ingredients}
             />
+          </section>
+          <Separator />
+        </>
+      ) : !isEditing && (
+        <>
+          <section>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-muted-foreground/60">Nutrition</h2>
+              <div className="flex items-center gap-3">
+                {nutritionStatus === 'error' && (
+                  <span className="text-xs text-destructive">Could not calculate. Try again.</span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={handleCalculateNutrition}
+                  disabled={nutritionStatus === 'loading'}
+                >
+                  <Sparkles className="size-3.5" />
+                  {nutritionStatus === 'loading' ? 'Calculating…' : 'Calculate nutrition'}
+                </Button>
+              </div>
+            </div>
           </section>
           <Separator />
         </>
