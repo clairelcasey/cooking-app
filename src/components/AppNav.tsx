@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChefHat, CalendarDays, ShoppingCart, Plus, LogOut, Link2, Camera, FileText, PenLine, ChevronDown, MessageSquare } from 'lucide-react'
+import { ChefHat, CalendarDays, ShoppingCart, Plus, LogOut, Link2, Camera, FileText, PenLine, ChevronDown, MessageSquare, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/app/auth/actions'
@@ -209,6 +209,15 @@ export function AppNav({ userName, userAvatarUrl }: AppNavProps) {
                         <div className="border-t border-border" />
                       </>
                     )}
+                    <Link
+                      href="/settings"
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent cursor-pointer"
+                      onClick={() => setAvatarOpen(false)}
+                    >
+                      <Settings className="size-4 text-muted-foreground" />
+                      Settings
+                    </Link>
+                    <div className="border-t border-border" />
                     <form action={signOut}>
                       <button
                         type="submit"

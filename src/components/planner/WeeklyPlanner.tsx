@@ -11,13 +11,19 @@ import { NudgeBanner } from './NudgeBanner'
 import { addPlanEntry, addQuickAddEntry, removePlanEntry } from '@/app/planner/actions'
 import type { Nutrition, PlanEntry, WeekPlan, RecipeListItem, MealSlot } from '@/types/recipe'
 
+interface NutritionGoals {
+  protein_g?: number
+  fiber_g?: number
+}
+
 interface WeeklyPlannerProps {
   weekStart: string
   initialPlan: WeekPlan
   recipes: RecipeListItem[]
+  nutritionGoals?: NutritionGoals
 }
 
-export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlannerProps) {
+export function WeeklyPlanner({ weekStart, initialPlan, recipes, nutritionGoals }: WeeklyPlannerProps) {
   const router = useRouter()
   const currentWeekStart = parseISO(weekStart)
 
@@ -187,6 +193,7 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes }: WeeklyPlanner
           <PlannerGrid
             weekStart={currentWeekStart}
             entries={entries}
+            nutritionGoals={nutritionGoals}
             onAdd={handleOpenPicker}
             onQuickAdd={handleQuickAdd}
             onRemove={handleRemove}

@@ -3,8 +3,16 @@
 import { cn } from '@/lib/utils'
 import type { Nutrition } from '@/types/recipe'
 
+interface NutritionGoals {
+  protein_g: number
+  fiber_g: number
+}
+
+const DEFAULT_GOALS: NutritionGoals = { protein_g: 120, fiber_g: 25 }
+
 interface DayNutritionBarProps {
   nutritionList: Nutrition[]
+  goals?: Partial<NutritionGoals>
   className?: string
 }
 
@@ -23,55 +31,73 @@ function sumNutrition(list: Nutrition[]): Nutrition {
   )
 }
 
-function fiberColor(fiberG: number): string {
-  if (fiberG >= 20) return 'text-green-600 dark:text-green-400'
+function fiberBarColor(fiberG: number, goalG: number): string {
+  if (fiberG >= goalG) return 'bg-green-500'
+  if (fiberG >= 12) return 'bg-amber-400'
+  return 'bg-red-400'
+}
+
+function fiberTextColor(fiberG: number, goalG: number): string {
+  if (fiberG >= goalG) return 'text-green-600 dark:text-green-400'
   if (fiberG >= 12) return 'text-amber-600 dark:text-amber-400'
   return 'text-red-500 dark:text-red-400'
 }
 
-export function DayNutritionBar({ nutritionList, className }: DayNutritionBarProps) {
+interface MacroRowProps {
+  label: string
+  value: number
+  goal: number
+  barColor: string
+  textColor?: string
+}
+
+function MacroRow({ label, value, goal, barColor, textColor }: MacroRowProps) {
+  const pct = Math.min(value / goal, 1) * 100
+  return (
+    <div className="space-y-0.5">
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn('font-medium', textColor)}>
+          {Math.round(value)}g{' '}
+          <span className="font-normal text-muted-foreground">/ {goal}g</span>
+        </span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div className={barColor} style={{ width: `${pct}%`, height: '100%' }} />
+      </div>
+    </div>
+  )
+}
+
+export function DayNutritionBar({ nutritionList, goals, className }: DayNutritionBarProps) {
   const valid = nutritionList.filter((n) => n && Object.keys(n).length > 0)
   if (valid.length === 0) return null
 
   const total = sumNutrition(valid)
-
   const protein = total.protein_g ?? 0
   const calories = total.calories ?? 0
-  const carbs = total.carbs_g ?? 0
-  const fat = total.fat_g ?? 0
   const fiber = total.fiber_g ?? 0
 
-  // Macro % of calories
-  const totalMacroCals = protein * 4 + carbs * 4 + fat * 9
-  const proteinPct = totalMacroCals > 0 ? Math.round((protein * 4 / totalMacroCals) * 100) : 0
-  const fatPct = totalMacroCals > 0 ? Math.round((fat * 9 / totalMacroCals) * 100) : 0
-  const carbPct = totalMacroCals > 0 ? Math.round((carbs * 4 / totalMacroCals) * 100) : 0
+  const proteinGoal = goals?.protein_g ?? DEFAULT_GOALS.protein_g
+  const fiberGoal = goals?.fiber_g ?? DEFAULT_GOALS.fiber_g
 
   return (
-    <div className={cn('space-y-1 px-1 py-1.5', className)}>
-      {/* Calories + protein row */}
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-        <span className="font-medium text-foreground">{calories} kcal</span>
-        <span>{Math.round(protein)}g protein</span>
-      </div>
-
-      {/* Stacked macro bar */}
-      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className="bg-blue-400" style={{ width: `${proteinPct}%` }} />
-        <div className="bg-amber-400" style={{ width: `${fatPct}%` }} />
-        <div className="bg-stone-300" style={{ width: `${carbPct}%` }} />
-      </div>
-
-      {/* Fiber row */}
-      <div className="flex items-center justify-between text-[10px]">
-        <span className="text-muted-foreground">Fiber</span>
-        <span className={cn('font-medium', fiberColor(fiber))}>
-          {Math.round(fiber)}g <span className="font-normal text-muted-foreground">/ 25g</span>
-        </span>
-      </div>
-
+    <div className={cn('space-y-1.5 px-1 py-1.5', className)}>
+      <MacroRow
+        label="Protein"
+        value={protein}
+        goal={proteinGoal}
+        barColor="bg-blue-400"
+      />
+      <MacroRow
+        label="Fiber"
+        value={fiber}
+        goal={fiberGoal}
+        barColor={fiberBarColor(fiber, fiberGoal)}
+        textColor={fiberTextColor(fiber, fiberGoal)}
+      />
       <p className="text-[9px] text-muted-foreground">
-        {valid.length} meal{valid.length !== 1 ? 's' : ''} tracked
+        {calories} kcal · {valid.length} meal{valid.length !== 1 ? 's' : ''}
       </p>
     </div>
   )

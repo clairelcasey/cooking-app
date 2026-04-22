@@ -15,9 +15,15 @@ const MEAL_LABELS: Record<MealSlotType, string> = {
   snack: 'Snack',
 }
 
+interface NutritionGoals {
+  protein_g?: number
+  fiber_g?: number
+}
+
 interface PlannerGridProps {
   weekStart: Date
   entries: PlanEntry[]
+  nutritionGoals?: NutritionGoals
   onAdd: (date: string, mealSlot: MealSlotType) => void
   onQuickAdd: (date: string, mealSlot: MealSlotType, name: string, nutrition: Nutrition) => void
   onRemove: (entryId: string) => void
@@ -28,7 +34,7 @@ function getWeekDays(weekStart: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 }
 
-export function PlannerGrid({ weekStart, entries, onAdd, onQuickAdd, onRemove, onDrop }: PlannerGridProps) {
+export function PlannerGrid({ weekStart, entries, nutritionGoals, onAdd, onQuickAdd, onRemove, onDrop }: PlannerGridProps) {
   const days = getWeekDays(weekStart)
 
   function getEntry(date: Date, mealSlot: MealSlotType): PlanEntry | undefined {
@@ -80,7 +86,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onQuickAdd, onRemove, o
                 >
                   {format(day, 'd')}
                 </div>
-                <DayNutritionBar nutritionList={getDayNutrition(day)} className="mt-1" />
+                <DayNutritionBar nutritionList={getDayNutrition(day)} goals={nutritionGoals} className="mt-1" />
               </div>
             )
           })}
@@ -159,7 +165,7 @@ export function PlannerGrid({ weekStart, entries, onAdd, onQuickAdd, onRemove, o
                     Today
                   </span>
                 )}
-                <DayNutritionBar nutritionList={getDayNutrition(day)} className="mt-1" />
+                <DayNutritionBar nutritionList={getDayNutrition(day)} goals={nutritionGoals} className="mt-1" />
               </div>
 
               {/* Meal slots */}

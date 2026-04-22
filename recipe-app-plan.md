@@ -386,6 +386,23 @@ Build in this sequence to avoid rework:
 
 ---
 
+## User Preferences & Settings
+
+A `/settings` page (`src/app/settings/`) lets users configure their daily nutrition targets. Goals are stored in `profiles.health_goals` (JSONB).
+
+**Currently supported:**
+- `protein_goal_g` — daily protein target (default: 120g)
+- `fiber_goal_g` — daily fiber target (default: 25g)
+
+These targets drive the labeled progress bars shown on each day card in the planner (`DayNutritionBar`).
+
+**Future additions:**
+- Calorie goal (`calorie_goal`)
+- Auto-calculated protein goal from bodyweight (e.g. `1.6g × kg`)
+- Carb and fat targets for full macro tracking
+
+---
+
 ## Future Considerations (Phase 2+)
 
 - **Pantry tracker**: mark ingredients as stocked → auto-exclude from grocery list
