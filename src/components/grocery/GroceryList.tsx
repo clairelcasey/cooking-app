@@ -2,28 +2,22 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { format, parseISO, addWeeks, subWeeks } from 'date-fns'
-import { RefreshCw, Copy, ChevronDown, ChevronLeft, ChevronRight, Check, Package } from 'lucide-react'
+import { Copy, ChevronDown, Check, Package, ShoppingBasket } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GrocerySection } from './GrocerySection'
 import { GroceryItemRow } from './GroceryItem'
 import { AddItemInput } from './AddItemInput'
+import { GroceryRecipePicker } from './GroceryRecipePicker'
 import { CATEGORY_ORDER, CATEGORY_LABELS } from '@/lib/grocery/categories'
-import { generateList, toggleItem, addManualItem, removeItem, setPantryOverride } from '@/app/grocery/actions'
+import { toggleItem, addManualItem, removeItem, setPantryOverride } from '@/app/grocery/actions'
 import type { GroceryItem, GroceryCategory, PantryStatus } from '@/types/grocery'
-
-interface PastList {
-  id: string
-  created_at: string
-  week_start_date: string
-}
+import type { RecipeListItem } from '@/types/recipe'
 
 interface GroceryListProps {
-  weekStart: string
-  listId: string
-  planId: string
+  listId: string | null
   initialItems: GroceryItem[]
-  pastLists: PastList[]
+  recipes: RecipeListItem[]
+  initialSelectedIds: string[]
 }
 
 function effectiveStatus(item: GroceryItem): PantryStatus {
@@ -31,22 +25,18 @@ function effectiveStatus(item: GroceryItem): PantryStatus {
 }
 
 export function GroceryList({
-  weekStart,
-  listId,
+  listId: initialListId,
   initialItems,
+  recipes,
+  initialSelectedIds,
 }: GroceryListProps) {
   const router = useRouter()
+  const [listId, setListId] = useState<string | null>(initialListId)
   const [items, setItems] = useState<GroceryItem[]>(initialItems)
-  const [isRegenerating, setIsRegenerating] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(initialSelectedIds.length > 0)
   const [copied, setCopied] = useState(false)
   const [checkedExpanded, setCheckedExpanded] = useState(false)
   const [pantryExpanded, setPantryExpanded] = useState(false)
-
-  const weekStartDate = parseISO(weekStart)
-  const prevWeek = subWeeks(weekStartDate, 1)
-  const nextWeek = addWeeks(weekStartDate, 1)
-  const weekLabel =
-    format(weekStartDate, 'MMM d') + ' – ' + format(addWeeks(weekStartDate, 1), 'MMM d')
 
   // Three buckets: active (need to buy), checked (got it), in pantry (skip)
   const active = items.filter(i => !i.checked && effectiveStatus(i) !== 'in_pantry')
@@ -58,6 +48,7 @@ export function GroceryList({
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
   async function handleToggle(itemId: string, isChecked: boolean) {
+    if (!listId) return
     setItems(prev =>
       prev.map(i =>
         i.id === itemId
@@ -70,34 +61,34 @@ export function GroceryList({
   }
 
   async function handleAddManual(ingredient: string, amount: string, unit: string) {
+    if (!listId) return
     const result = await addManualItem(listId, ingredient, amount, unit)
     if (result.item) setItems(prev => [...prev, result.item!])
     if (result.error) router.refresh()
   }
 
   async function handleRemove(itemId: string) {
+    if (!listId) return
     setItems(prev => prev.filter(i => i.id !== itemId))
     const result = await removeItem(listId, itemId)
     if (result.error) router.refresh()
   }
 
   async function handlePantryOverride(itemId: string, override: PantryStatus) {
+    if (!listId) return
     setItems(prev =>
       prev.map(i => i.id === itemId ? { ...i, pantry_override: override } : i)
     )
     await setPantryOverride(listId, itemId, override)
   }
 
-  // Move an item from the pantry section back to the active list
   function handleNeedToBuy(itemId: string) {
     handlePantryOverride(itemId, 'need_to_buy')
   }
 
-  async function handleRegenerate() {
-    setIsRegenerating(true)
-    const result = await generateList(weekStart)
-    if (result.items) setItems(result.items)
-    setIsRegenerating(false)
+  function handleGenerate(newItems: GroceryItem[], newListId: string) {
+    setItems(newItems)
+    setListId(newListId)
   }
 
   function handleCopy() {
@@ -112,59 +103,40 @@ export function GroceryList({
 
   return (
     <div>
-      {/* Week navigation */}
+      {/* Toolbar */}
       <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push(`/grocery?week=${format(prevWeek, 'yyyy-MM-dd')}`)}
-            className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Previous week"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <span className="text-sm font-medium">{weekLabel}</span>
-          <button
-            onClick={() => router.push(`/grocery?week=${format(nextWeek, 'yyyy-MM-dd')}`)}
-            className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Next week"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
+        <button
+          onClick={() => setPickerOpen(true)}
+          className={cn(
+            'flex cursor-pointer items-center gap-1.5 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-white',
+            'transition-colors hover:bg-stone-700'
+          )}
+        >
+          <ShoppingBasket className="size-3.5" />
+          Select Recipes
+        </button>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleRegenerate}
-            disabled={isRegenerating}
-            className={cn(
-              'flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium',
-              'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
-              'disabled:pointer-events-none disabled:opacity-50'
-            )}
-          >
-            <RefreshCw className={cn('size-3.5', isRegenerating && 'animate-spin')} />
-            Refresh
-          </button>
-          <button
-            onClick={handleCopy}
-            className={cn(
-              'flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium',
-              'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
-            )}
-          >
-            {copied ? (
-              <>
-                <Check className="size-3.5 text-emerald-600" />
-                <span className="text-emerald-600">Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="size-3.5" />
-                Copy
-              </>
-            )}
-          </button>
-        </div>
+        <button
+          onClick={handleCopy}
+          disabled={active.length === 0}
+          className={cn(
+            'flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium',
+            'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+            'disabled:pointer-events-none disabled:opacity-40'
+          )}
+        >
+          {copied ? (
+            <>
+              <Check className="size-3.5 text-emerald-600" />
+              <span className="text-emerald-600">Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="size-3.5" />
+              Copy
+            </>
+          )}
+        </button>
       </div>
 
       {/* Grocery insight banner */}
@@ -172,7 +144,7 @@ export function GroceryList({
         const hasProteins = active.some(i => i.category === 'proteins')
         const produceCount = active.filter(i => i.category === 'produce').length
         const gap = !hasProteins
-          ? 'No proteins on your list this week.'
+          ? 'No proteins on your list.'
           : produceCount < 3
           ? 'Less than 3 produce items on your list.'
           : null
@@ -180,8 +152,8 @@ export function GroceryList({
         if (!gap) return null
 
         const prompt = !hasProteins
-          ? "My grocery list has no proteins this week. What should I add based on my meal plan?"
-          : "My grocery list is low on produce. What vegetables or fruits should I add?"
+          ? 'My grocery list has no proteins. What should I add?'
+          : 'My grocery list is low on produce. What vegetables or fruits should I add?'
 
         return (
           <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-3 text-sm dark:border-sky-800/40 dark:bg-sky-950/20">
@@ -190,7 +162,7 @@ export function GroceryList({
             </p>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('open-agent', { detail: { message: prompt } }))}
-              className="mt-1.5 text-xs font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
+              className="mt-1.5 cursor-pointer text-xs font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
             >
               Ask the assistant →
             </button>
@@ -203,7 +175,7 @@ export function GroceryList({
         <div className="py-16 text-center text-muted-foreground">
           <p className="text-sm">No items yet.</p>
           <p className="mt-1 text-xs">
-            Plan some meals in the Planner and regenerate, or add items below.
+            Click <span className="font-medium text-foreground">Select Recipes</span> to generate your grocery list.
           </p>
         </div>
       )}
@@ -221,7 +193,7 @@ export function GroceryList({
       ))}
 
       {/* Add item input */}
-      <AddItemInput onAdd={handleAddManual} />
+      {listId && <AddItemInput onAdd={handleAddManual} />}
 
       {/* Checked items */}
       {checked.length > 0 && (
@@ -243,7 +215,7 @@ export function GroceryList({
         </CollapsibleSection>
       )}
 
-      {/* In pantry — items skipped because they're already at home */}
+      {/* In pantry */}
       {inPantry.length > 0 && (
         <CollapsibleSection
           label="In pantry"
@@ -263,6 +235,15 @@ export function GroceryList({
           ))}
         </CollapsibleSection>
       )}
+
+      {/* Recipe picker modal */}
+      <GroceryRecipePicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        recipes={recipes}
+        initialSelectedIds={initialSelectedIds}
+        onGenerate={handleGenerate}
+      />
     </div>
   )
 }
@@ -290,7 +271,7 @@ function CollapsibleSection({
     <div className="mt-4">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+        className="flex w-full cursor-pointer items-center justify-between py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
       >
         <span className="flex items-center gap-1.5">
           {icon}
@@ -329,7 +310,7 @@ function PantryItemRow({
   const qty = [item.amount, item.unit].filter(Boolean).join(' ')
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted/40 transition-colors">
+    <div className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/40">
       <Package className="size-4 shrink-0 text-muted-foreground/30" />
 
       <div className="min-w-0 flex-1">
@@ -346,13 +327,13 @@ function PantryItemRow({
 
       <button
         onClick={() => onNeedToBuy(item.id)}
-        className="shrink-0 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground"
+        className="shrink-0 cursor-pointer rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground"
       >
         Need to buy
       </button>
       <button
         onClick={() => onRemove(item.id)}
-        className="shrink-0 text-muted-foreground/20 opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+        className="shrink-0 cursor-pointer text-muted-foreground/20 opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
         aria-label={`Remove ${item.ingredient}`}
       >
         ×

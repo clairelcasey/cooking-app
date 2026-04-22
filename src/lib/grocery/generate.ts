@@ -1,5 +1,5 @@
 import type { GroceryItem, GroceryItemType, PantryStatus, PantryStaple, RecurringItem } from '@/types/grocery'
-import type { PlanEntry } from '@/types/recipe'
+import type { Ingredient, PlanEntry } from '@/types/recipe'
 import { parseAmount, formatScaledAmount } from '@/lib/cook-mode/scale'
 import { categorize } from './categories'
 import { getShelfLifeDays } from './shelf-life'
@@ -236,35 +236,22 @@ export function computePantryStatus(
   return null
 }
 
-// ─── Main entry point ──────────────────────────────────────────────────────────
+// ─── Shared finishing pipeline ─────────────────────────────────────────────────
+// Applies dedup, restock suggestions, pantry overrides, and pantry status to a
+// raw ingredient list. Called by both generateGroceryList and generateFromSelectedRecipes.
 
-export interface GenerateListInput {
-  planEntries: PlanEntry[]
+interface FinishOptions {
   pantryStaples: PantryStaple[]
   recurringItems: RecurringItem[]
   purchaseHistory: CheckedHistoryItem[]
   existingList: GroceryItem[] | null
 }
 
-export function generateGroceryList(input: GenerateListInput): GroceryItem[] {
-  const { planEntries, pantryStaples, recurringItems, purchaseHistory, existingList } = input
+function finishList(recipeRaw: RawIngredient[], options: FinishOptions): GroceryItem[] {
+  const { pantryStaples, recurringItems, purchaseHistory, existingList } = options
   const now = new Date()
 
-  // 1. Collect ingredients from planned recipes + recurring items
-  const rawItems: RawIngredient[] = []
-
-  for (const entry of planEntries) {
-    if (!entry.recipe?.ingredients) continue
-    for (const ing of entry.recipe.ingredients) {
-      rawItems.push({
-        ingredient: ing.ingredient,
-        amount: ing.amount,
-        unit: ing.unit ?? '',
-        source: entry.recipe.title,
-        type: 'recipe',
-      })
-    }
-  }
+  const rawItems: RawIngredient[] = [...recipeRaw]
 
   for (const item of recurringItems) {
     rawItems.push({
@@ -276,28 +263,19 @@ export function generateGroceryList(input: GenerateListInput): GroceryItem[] {
     })
   }
 
-  // 2. Deduplicate and merge
   let items = deduplicateIngredients(rawItems)
 
-  // Track normalized names already in the list
   const listKeys = new Set(items.map(i => normalizeIngredientName(i.ingredient)))
-
-  // Track which normalized recipe ingredient names exist
   const recipeKeys = new Set(
-    rawItems
-      .filter(i => i.type === 'recipe')
-      .map(i => normalizeIngredientName(i.ingredient))
+    recipeRaw.map(i => normalizeIngredientName(i.ingredient))
   )
 
-  // 3. Restock suggestions: pantry staples used in recipes this week
   for (const staple of pantryStaples) {
     const normalizedStaple = normalizeIngredientName(staple.ingredient)
-    // Is this staple used in any recipe this week?
     const isUsed = [...recipeKeys].some(k =>
       k.includes(normalizedStaple) || normalizedStaple.includes(k)
     )
     if (!isUsed) continue
-    // Already in the list (from recipe ingredients)?
     const alreadyPresent = [...listKeys].some(k =>
       k.includes(normalizedStaple) || normalizedStaple.includes(k)
     )
@@ -318,7 +296,6 @@ export function generateGroceryList(input: GenerateListInput): GroceryItem[] {
     listKeys.add(normalizedStaple)
   }
 
-  // 4. Restore pantry overrides + re-append manual items from existing list
   if (existingList) {
     items = items.map(item => {
       const normalizedName = normalizeIngredientName(item.ingredient)
@@ -329,16 +306,66 @@ export function generateGroceryList(input: GenerateListInput): GroceryItem[] {
       return { ...item, pantry_override: match.pantry_override }
     })
 
-    // Re-append manual items (they survive regeneration)
     const manualItems = existingList.filter(i => i.type === 'manual')
     items.push(...manualItems)
   }
 
-  // 5. Apply pantry status from purchase history
   items = items.map(item => ({
     ...item,
     pantry_status: computePantryStatus(item, purchaseHistory, now),
   }))
 
   return items
+}
+
+// ─── Plan-based generation ─────────────────────────────────────────────────────
+
+export interface GenerateListInput {
+  planEntries: PlanEntry[]
+  pantryStaples: PantryStaple[]
+  recurringItems: RecurringItem[]
+  purchaseHistory: CheckedHistoryItem[]
+  existingList: GroceryItem[] | null
+}
+
+export function generateGroceryList(input: GenerateListInput): GroceryItem[] {
+  const { planEntries, ...options } = input
+
+  const recipeRaw: RawIngredient[] = []
+  for (const entry of planEntries) {
+    if (!entry.recipe?.ingredients) continue
+    for (const ing of entry.recipe.ingredients) {
+      recipeRaw.push({
+        ingredient: ing.ingredient,
+        amount: ing.amount,
+        unit: ing.unit ?? '',
+        source: entry.recipe.title,
+        type: 'recipe',
+      })
+    }
+  }
+
+  return finishList(recipeRaw, options)
+}
+
+// ─── Recipe-picker–based generation ───────────────────────────────────────────
+
+export function generateFromSelectedRecipes(
+  recipes: Array<{ id: string; title: string; ingredients: Ingredient[] }>,
+  options: FinishOptions
+): GroceryItem[] {
+  const recipeRaw: RawIngredient[] = []
+  for (const recipe of recipes) {
+    for (const ing of recipe.ingredients) {
+      recipeRaw.push({
+        ingredient: ing.ingredient,
+        amount: ing.amount,
+        unit: ing.unit ?? '',
+        source: recipe.title,
+        type: 'recipe',
+      })
+    }
+  }
+
+  return finishList(recipeRaw, options)
 }

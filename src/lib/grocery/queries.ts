@@ -75,6 +75,57 @@ export async function saveGroceryList(
   return data as GroceryList
 }
 
+// ─── Recipe-picker list (plan_id = null) ───────────────────────────────────────
+
+export async function getRecipePickerList(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<GroceryList | null> {
+  const { data, error } = await supabase
+    .from('grocery_lists')
+    .select('*')
+    .eq('user_id', userId)
+    .is('plan_id', null)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[getRecipePickerList] error:', error)
+    return null
+  }
+  return data as GroceryList | null
+}
+
+export async function saveRecipePickerList(
+  supabase: SupabaseClient,
+  userId: string,
+  items: GroceryItem[]
+): Promise<GroceryList> {
+  const existing = await getRecipePickerList(supabase, userId)
+
+  if (existing) {
+    const { error } = await supabase
+      .from('grocery_lists')
+      .update({ items, updated_at: new Date().toISOString() })
+      .eq('id', existing.id)
+    if (error) throw error
+    return { ...existing, items }
+  }
+
+  const { data, error } = await supabase
+    .from('grocery_lists')
+    .insert({ plan_id: null, user_id: userId, items })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('[saveRecipePickerList] insert error:', error)
+    throw error
+  }
+  return data as GroceryList
+}
+
 export async function updateGroceryItems(
   supabase: SupabaseClient,
   listId: string,

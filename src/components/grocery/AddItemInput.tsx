@@ -68,7 +68,7 @@ export function AddItemInput({ onAdd }: AddItemInputProps) {
         disabled={pending || !ingredient.trim()}
         className={cn(
           'flex size-9 shrink-0 items-center justify-center rounded-md',
-          'bg-primary text-primary-foreground transition-opacity',
+          'cursor-pointer bg-primary text-primary-foreground transition-opacity',
           'hover:opacity-90 disabled:pointer-events-none disabled:opacity-40'
         )}
         aria-label="Add item"

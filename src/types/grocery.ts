@@ -29,7 +29,7 @@ export interface GroceryItem {
 
 export interface GroceryList {
   id: string
-  plan_id: string
+  plan_id: string | null
   user_id: string
   items: GroceryItem[]
   created_at: string

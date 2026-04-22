@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { addWeeks, subWeeks, addDays, format, parseISO } from 'date-fns'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShoppingBasket } from 'lucide-react'
 import { PlannerGrid } from './PlannerGrid'
 import { RecipeSidePanel } from './RecipeSidePanel'
 import { RecipePicker } from './RecipePicker'
@@ -157,7 +157,7 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes, nutritionGoals 
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('prev')}
-            className="rounded-lg border border-stone-200 bg-white p-1.5 text-stone-500 shadow-sm transition-colors hover:text-stone-900"
+            className="cursor-pointer rounded-lg border border-stone-200 bg-white p-1.5 text-stone-500 shadow-sm transition-colors hover:text-stone-900"
             aria-label="Previous week"
           >
             <ChevronLeft className="size-4" />
@@ -169,12 +169,33 @@ export function WeeklyPlanner({ weekStart, initialPlan, recipes, nutritionGoals 
 
           <button
             onClick={() => navigate('next')}
-            className="rounded-lg border border-stone-200 bg-white p-1.5 text-stone-500 shadow-sm transition-colors hover:text-stone-900"
+            className="cursor-pointer rounded-lg border border-stone-200 bg-white p-1.5 text-stone-500 shadow-sm transition-colors hover:text-stone-900"
             aria-label="Next week"
           >
             <ChevronRight className="size-4" />
           </button>
         </div>
+
+        {/* Grocery list shortcut */}
+        {(() => {
+          const recipeIds = entries
+            .filter(e => e.recipe_id)
+            .map(e => e.recipe_id as string)
+          const uniqueIds = [...new Set(recipeIds)]
+          const href =
+            uniqueIds.length > 0
+              ? `/grocery?recipes=${uniqueIds.join(',')}`
+              : '/grocery'
+          return (
+            <a
+              href={href}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-600 shadow-sm transition-colors hover:text-stone-900"
+            >
+              <ShoppingBasket className="size-4" />
+              Grocery List
+            </a>
+          )
+        })()}
       </div>
 
       {/* Nutrition nudge banner */}

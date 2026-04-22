@@ -20,7 +20,7 @@ export function GroceryItemRow({ item, onToggle, onRemove, onPantryOverride }: G
       <button
         onClick={() => onToggle(item.id, !item.checked)}
         className={cn(
-          'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+          'mt-0.5 flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-colors',
           item.checked
             ? 'border-primary bg-primary text-primary-foreground'
             : 'border-muted-foreground/40 hover:border-primary'
@@ -68,7 +68,7 @@ export function GroceryItemRow({ item, onToggle, onRemove, onPantryOverride }: G
       {/* Remove */}
       <button
         onClick={() => onRemove(item.id)}
-        className="mt-0.5 shrink-0 text-muted-foreground/20 opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+        className="mt-0.5 shrink-0 cursor-pointer text-muted-foreground/20 opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
         aria-label={`Remove ${item.ingredient}`}
       >
         <X className="size-3.5" />

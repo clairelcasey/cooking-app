@@ -29,7 +29,7 @@ export function GrocerySection({
     <div className="mb-1">
       <button
         onClick={() => setCollapsed(v => !v)}
-        className="flex w-full items-center justify-between py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+        className="flex w-full cursor-pointer items-center justify-between py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
       >
         <span>
           {label}
