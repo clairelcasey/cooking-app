@@ -94,6 +94,13 @@ const KEYWORD_MAP: Array<[string, GroceryCategory]> = [
   ['kidney bean', 'proteins'],
   ['white bean', 'proteins'],
   ['pinto bean', 'proteins'],
+  ['cannellini', 'proteins'],
+  ['garbanzo', 'proteins'],
+  ['navy bean', 'proteins'],
+  ['great northern', 'proteins'],
+  ['fava bean', 'proteins'],
+  ['adzuki', 'proteins'],
+  ['bean', 'proteins'], // generic fallback — 'green bean' (produce) appears earlier and wins
   ['egg', 'proteins'],
 
   // dairy
